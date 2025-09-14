@@ -1,0 +1,101 @@
+openapi: 3.0.3
+info:
+  title: Browser Extension Message Contracts
+  description: Message passing contracts for popup ↔ content script communication
+  version: 1.0.0
+
+paths:
+  /messages/getPageContent:
+    post:
+      summary: Request page content extraction
+      description: Popup sends message to content script to extract current page content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPageContentRequest'
+      responses:
+        '200':
+          description: Content extracted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPageContentResponse'
+
+components:
+  schemas:
+    GetPageContentRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum: ["getPageContent"]
+          example: "getPageContent"
+        timestamp:
+          type: number
+          description: Request timestamp for debugging
+          example: 1726311234567
+
+    GetPageContentResponse:
+      type: object
+      description: Response from content script (same as PageData)
+      required:
+        - title
+        - url
+        - content
+        - markdown
+      properties:
+        title:
+          type: string
+          example: "How to Build Browser Extensions"
+        url:
+          type: string
+          format: uri
+          example: "https://example.com/article"
+        author:
+          type: string
+          example: "John Developer"
+        published:
+          type: string
+          example: "2025-09-14"
+        content:
+          type: string
+          description: Raw HTML content extracted by Defuddle
+          example: "<p>This is the article content...</p>"
+        markdown:
+          type: string
+          description: HTML converted to markdown by Turndown
+          example: "This is the article content..."
+        description:
+          type: string
+          example: "A comprehensive guide to browser extension development"
+        domain:
+          type: string
+          example: "example.com"
+        favicon:
+          type: string
+          format: uri
+          example: "https://example.com/favicon.ico"
+        image:
+          type: string
+          format: uri
+          example: "https://example.com/og-image.jpg"
+        site:
+          type: string
+          example: "Example Blog"
+
+    MessageError:
+      type: object
+      description: Error response when message handling fails
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: "Content extraction failed"
+        details:
+          type: string
+          example: "Defuddle could not parse page content"

@@ -1,0 +1,127 @@
+openapi: 3.0.3
+info:
+  title: Extension Debug Popup API
+  description: Internal API contracts for popup-background-content communication
+  version: 1.0.0
+
+paths:
+  /popup/content:
+    get:
+      summary: Get extracted content for active tab
+      description: Popup requests extracted markdown content from the current active tab
+      responses:
+        '200':
+          description: Successfully retrieved content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopupContentResponse'
+        '404':
+          description: No content available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopupErrorResponse'
+        '500':
+          description: Extraction or communication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PopupErrorResponse'
+
+components:
+  schemas:
+    PopupContentResponse:
+      type: object
+      required:
+        - success
+        - content
+        - tabId
+      properties:
+        success:
+          type: boolean
+          example: true
+        content:
+          type: string
+          description: Extracted markdown content
+          example: "# Article Title\n\nThis is the extracted content..."
+        tabId:
+          type: integer
+          description: ID of the source tab
+          example: 123
+        pageData:
+          $ref: '#/components/schemas/PageData'
+
+    PopupErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Human-readable error message
+          example: "No content could be extracted from this page"
+        errorCode:
+          type: string
+          enum:
+            - NO_CONTENT
+            - INVALID_PAGE
+            - COMMUNICATION_ERROR
+            - EXTRACTION_ERROR
+          example: "NO_CONTENT"
+        tabId:
+          type: integer
+          description: ID of the source tab (if available)
+          example: 123
+
+    PageData:
+      type: object
+      description: Extracted page content and metadata (existing interface)
+      required:
+        - title
+        - url
+        - content
+        - markdown
+      properties:
+        title:
+          type: string
+          example: "How to Build Browser Extensions"
+        url:
+          type: string
+          format: uri
+          example: "https://example.com/article"
+        author:
+          type: string
+          example: "John Developer"
+        published:
+          type: string
+          example: "2025-09-14"
+        content:
+          type: string
+          description: Raw HTML content
+          example: "<p>This is the article content...</p>"
+        markdown:
+          type: string
+          description: Converted markdown content
+          example: "This is the article content..."
+        description:
+          type: string
+          example: "A comprehensive guide to browser extension development"
+        domain:
+          type: string
+          example: "example.com"
+        favicon:
+          type: string
+          format: uri
+          example: "https://example.com/favicon.ico"
+        image:
+          type: string
+          format: uri
+          example: "https://example.com/og-image.jpg"
+        site:
+          type: string
+          example: "Example Blog"
