@@ -4,6 +4,7 @@ export interface PageData {
   author: string;
   published: string;
   content: string;
+  markdown: string;
   description: string;
   domain: string;
   favicon: string;

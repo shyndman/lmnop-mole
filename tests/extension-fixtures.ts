@@ -6,7 +6,7 @@ export const test = base.extend<{
   extensionId: string;
 }>({
   context: async ({ }, use) => {
-    const pathToExtension = path.join(__dirname, '../dist');
+    const pathToExtension = path.join(__dirname, '../dev');
     const context = await chromium.launchPersistentContext('', {
       channel: 'chromium',
       headless: false, // Extensions require headed mode

@@ -7,6 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { open: 'never' }]],
+  timeout: 30000, // 30 seconds normal timeout
   use: {
     headless: false, // Extensions require headed mode
   },

@@ -79,4 +79,57 @@ test.describe('Content Extraction', () => {
     
     expect(hasExtensionLog).toBeTruthy();
   });
+
+  test('should extract content and convert to markdown', async ({ context }) => {
+    const page = await context.newPage();
+    
+    const logs: any[] = [];
+    page.on('console', (msg) => {
+      logs.push(msg);
+    });
+
+    // Navigate to a page with structured content
+    await page.goto('https://httpbin.org/html');
+    await page.waitForTimeout(3000);
+
+    // Find the background log entry forwarded to content script
+    const backgroundLog = logs.find(log => 
+      log.type() === 'log' && log.text().includes('[background:log] [mole] Extracted page data:')
+    );
+
+    expect(backgroundLog).toBeTruthy();
+
+    // Get the page data from the background log
+    if (backgroundLog) {
+      const pageData = await backgroundLog.args()[1]?.jsonValue();
+      
+      // Verify that the page data has both content and markdown fields
+      expect(pageData).toBeDefined();
+      expect(pageData.content).toBeDefined();
+      expect(pageData.markdown).toBeDefined();
+      expect(pageData.title).toBeDefined();
+      
+      // Verify markdown content is different from HTML content (converted)
+      expect(pageData.markdown).not.toBe(pageData.content);
+      
+      // Verify both HTML content and markdown are present
+      expect(pageData.content.length).toBeGreaterThan(0);
+      expect(pageData.markdown.length).toBeGreaterThan(0);
+      
+      // Markdown should not contain HTML tags
+      expect(pageData.markdown).not.toMatch(/<h1>/);
+      expect(pageData.markdown).not.toMatch(/<\/h1>/);
+      expect(pageData.markdown).not.toMatch(/<p>/);
+      expect(pageData.markdown).not.toMatch(/<\/p>/);
+      
+      // If content has headers, markdown should have markdown-style headers
+      if (pageData.content.includes('<h2>')) {
+        expect(pageData.markdown).toMatch(/##\s/); // Should have H2 markdown format
+      }
+      
+      console.log('✓ Markdown conversion test passed');
+      console.log('Content length:', pageData.content.length);
+      console.log('Markdown length:', pageData.markdown.length);
+    }
+  });
 });

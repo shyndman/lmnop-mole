@@ -2,6 +2,7 @@
 
 # NPM
 node_modules/
+test-results/
 
 # Dev
 dev/
