@@ -1,0 +1,21 @@
+.DS_Store
+
+# NPM
+node_modules/
+
+# Dev
+dev/
+dev_firefox/
+dev_safari/
+
+# Prod
+dist/
+dist_firefox/
+builds/
+assets/shared
+
+.cursorrules
+.env
+context/
+
+playwright-report/

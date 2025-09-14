@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"module": "es6",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"outDir": "./dist",
+		"sourceMap": true,
+		"typeRoots": ["./node_modules/@types"],
+		"moduleResolution": "node",
+		"types": ["chrome", "node", "webpack-env", "jest"],
+		"lib": ["es2017", "dom"]
+	},
+	"include": [
+		"src/**/*",
+		"tests/**/*"
+	],
+	"exclude": ["node_modules", "dist"]
+}

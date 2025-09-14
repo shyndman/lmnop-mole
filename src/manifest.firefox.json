@@ -1,0 +1,27 @@
+{
+	"manifest_version": 3,
+	"name": "mole",
+	"version": "0.1.0",
+	"description": "Automatically extracts content from web pages.",
+	"permissions": [
+		"activeTab",
+		"scripting"
+	],
+	"host_permissions": [
+		"<all_urls>",
+		"http://*/*",
+		"https://*/*"
+	],
+	"background": {
+		"scripts": ["background.js"]
+	},
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "mole@lmnop.dev",
+			"strict_min_version": "113.0"
+		},
+		"gecko_android": {
+			"strict_min_version": "113.0"
+		}
+	}
+}
