@@ -10,4 +10,29 @@ export interface PageData {
   favicon: string;
   image: string;
   site: string;
+  timestamp: number;
+  imageUrls: string[];
+}
+
+export interface RetryQueueItem {
+  id: string;
+  pageData: PageData;
+  retryCount: number;
+  lastAttemptTimestamp: number;
+  error: string;
+}
+
+export type TransmissionStatus =
+  | 'idle'
+  | 'extracting'
+  | 'sending'
+  | 'success'
+  | 'queued'
+  | 'failed';
+
+export interface TransmissionState {
+  status: TransmissionStatus;
+  queueSize: number;
+  totalQueuedBytes: number;
+  lastError?: string;
 }

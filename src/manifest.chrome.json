@@ -1,16 +1,20 @@
 {
 	"manifest_version": 3,
 	"name": "mole",
-	"version": "0.1.0",
+	"version": "0.11.11",
 	"description": "Automatically extracts content from web pages.",
 	"permissions": [
 		"activeTab",
-		"scripting"
+		"scripting",
+		"storage"
 	],
 	"host_permissions": [
 		"http://*/*",
 		"https://*/*"
 	],
+	"action": {
+		"default_popup": "popup.html"
+	},
 	"background": {
 		"service_worker": "background.js"
 	}

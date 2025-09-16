@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const CopyPlugin = require('copy-webpack-plugin');
+require('dotenv').config();
 
 module.exports = (env, argv) => {
 	const isFirefox = env.BROWSER === 'firefox';
@@ -21,6 +22,7 @@ module.exports = (env, argv) => {
 		entry: {
 			content: './src/content.ts',
 			background: './src/background.ts',
+			popup: './src/popup.ts',
 		},
 		output: {
 			path: path.resolve(__dirname, outputDir),
@@ -51,13 +53,18 @@ module.exports = (env, argv) => {
 		plugins: [
 			new webpack.DefinePlugin({
 				'process.env.NODE_ENV': JSON.stringify(argv.mode),
-				'DEBUG_MODE': JSON.stringify(!isProduction)
+				'DEBUG_MODE': JSON.stringify(!isProduction),
+				'DEADDROP_SERVER_URL': JSON.stringify(process.env.DEADDROP_SERVER_URL || '')
 			}),
 			new CopyPlugin({
 				patterns: [
-					{ 
-						from: isFirefox ? "src/manifest.firefox.json" : "src/manifest.chrome.json", 
-						to: "manifest.json" 
+					{
+						from: isFirefox ? "src/manifest.firefox.json" : "src/manifest.chrome.json",
+						to: "manifest.json"
+					},
+					{
+						from: "src/popup.html",
+						to: "popup.html"
 					},
 				],
 			}),

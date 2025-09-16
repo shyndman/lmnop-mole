@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mole - Debug Popup</title>
+    <style>
+        body {
+            width: 260px;
+            height: 340px;
+            margin: 0;
+            padding: 8px;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+        }
+
+        .popup-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .byte-count-container {
+            margin-top: 8px;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .byte-count-label {
+            color: #8892b0;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .byte-count-number {
+            color: #64ffda;
+            font-weight: 700;
+            font-family: 'Courier New', Monaco, monospace;
+            margin: 0 1px;
+        }
+
+        .byte-count-unit {
+            color: #ccd6f6;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .textarea-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #markdownContent {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            box-sizing: border-box;
+            font-family: 'Courier New', Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            resize: none;
+            background: #fafafa;
+            outline: none;
+        }
+
+        #markdownContent:focus {
+            border-color: #4285f4;
+            background: #ffffff;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0.9;
+        }
+
+        .copy-button:hover {
+            background: #3367d6;
+            opacity: 1;
+        }
+
+        .copy-button:active {
+            background: #2c5aa0;
+        }
+
+        .copy-button.copied {
+            background: #1976d2;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .error {
+            padding: 8px;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            color: #c33;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* State classes for show/hide elements */
+        .state-loading #loading {
+            display: flex;
+        }
+
+        .state-loading #error {
+            display: none;
+        }
+
+        .state-loading #markdownContent {
+            display: none;
+        }
+
+        .state-error #loading {
+            display: none;
+        }
+
+        .state-error #error {
+            display: block;
+        }
+
+        .state-error #markdownContent {
+            display: none;
+        }
+
+        .state-content #loading {
+            display: none;
+        }
+
+        .state-content #error {
+            display: none;
+        }
+
+        .state-content #markdownContent {
+            display: block;
+        }
+
+        .state-content .copy-button {
+            display: block;
+        }
+
+        .state-loading .copy-button {
+            display: none;
+        }
+
+        .state-error .copy-button {
+            display: none;
+        }
+
+        /* Byte count visibility states */
+        .state-loading .byte-count-container {
+            display: none;
+        }
+
+        .state-error .byte-count-container {
+            display: none;
+        }
+
+        .state-content .byte-count-container {
+            display: block;
+        }
+
+        .transmission-status {
+            margin-top: 8px;
+            padding: 6px;
+            border-radius: 4px;
+            background: #f5f5f5;
+            font-size: 11px;
+        }
+
+        .transmission-label {
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        #transmissionStatusText {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        #transmissionStatusText.status-idle { color: #888; }
+        #transmissionStatusText.status-extracting { color: #2196f3; }
+        #transmissionStatusText.status-sending { color: #ff9800; }
+        #transmissionStatusText.status-success { color: #1976d2; }
+        #transmissionStatusText.status-queued { color: #ff5722; }
+        #transmissionStatusText.status-failed { color: #f44336; }
+
+        .retry-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 4px;
+            color: #666;
+        }
+
+        .retry-button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .retry-button:hover {
+            background: #3367d6;
+        }
+
+        .retry-button:active {
+            background: #2c5aa0;
+        }
+    </style>
+</head>
+<body class="state-loading">
+    <div class="popup-container">
+        <div class="header">Extracted Markdown Content</div>
+        <div class="content-area">
+            <div id="loading" class="loading">Loading content...</div>
+            <div id="error" class="error"></div>
+            <div class="textarea-container">
+                <textarea
+                    id="markdownContent"
+                    readonly
+                    placeholder="No content extracted from this page..."
+                ></textarea>
+                <button id="copyButton" class="copy-button" title="Copy formatted content">Copy</button>
+            </div>
+        </div>
+        <div id="byteCountContainer" class="byte-count-container">
+            <span class="byte-count-label">Content size:</span>
+            <span class="byte-count-number">0</span><span class="byte-count-unit">B</span>
+        </div>
+        <div id="transmissionStatus" class="transmission-status">
+            <div class="transmission-label">Status: <span id="transmissionStatusText">Unknown</span></div>
+            <div id="retryInfo" class="retry-info" style="display: none;">
+                <span id="retryQueueSize">0</span> requests pending
+                <button id="retryButton" class="retry-button">Retry Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

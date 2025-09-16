@@ -71,7 +71,7 @@ export function getDomain(url: string): string {
 		}
 
 		const hostParts = hostname.split('.');
-		
+
 		// Handle special cases like co.uk, com.au, etc.
 		if (hostParts.length > 2) {
 			const lastTwo = hostParts.slice(-2).join('.');
@@ -79,10 +79,71 @@ export function getDomain(url: string): string {
 				return hostParts.slice(-3).join('.');
 			}
 		}
-		
+
 		return hostParts.slice(-2).join('.');
 	} catch (error) {
 		console.warn('Invalid URL:', url);
 		return '';
+	}
+}
+
+export function extractImageUrls(markdown: string, baseUrl: string, mainImage?: string): string[] {
+	const imageUrls: string[] = [];
+	const processedUrls = new Set<string>();
+
+	// Add main image first if it exists and is HTTPS
+	if (mainImage && mainImage.startsWith('https://')) {
+		imageUrls.push(mainImage);
+		processedUrls.add(mainImage);
+	}
+
+	// Extract markdown image syntax: ![alt](url)
+	const markdownImageRegex = /!\[.*?\]\(([^)]+)\)/g;
+	let match;
+	while ((match = markdownImageRegex.exec(markdown)) !== null) {
+		const url = resolveImageUrl(match[1], baseUrl);
+		if (url && !processedUrls.has(url)) {
+			imageUrls.push(url);
+			processedUrls.add(url);
+		}
+	}
+
+	// Extract HTML img tags: <img src="url">
+	const htmlImageRegex = /<img[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/gi;
+	while ((match = htmlImageRegex.exec(markdown)) !== null) {
+		const url = resolveImageUrl(match[1], baseUrl);
+		if (url && !processedUrls.has(url)) {
+			imageUrls.push(url);
+			processedUrls.add(url);
+		}
+	}
+
+	return imageUrls;
+}
+
+function resolveImageUrl(url: string, baseUrl: string): string | null {
+	try {
+		// Skip data URLs
+		if (url.startsWith('data:')) {
+			return null;
+		}
+
+		// Resolve relative URLs to absolute
+		let resolvedUrl: string;
+		if (url.startsWith('http://') || url.startsWith('https://')) {
+			resolvedUrl = url;
+		} else {
+			resolvedUrl = new URL(url, baseUrl).href;
+		}
+
+		// Only return HTTPS URLs
+		if (resolvedUrl.startsWith('https://')) {
+			return resolvedUrl;
+		}
+
+		return null;
+	} catch (error) {
+		console.warn('Failed to resolve image URL:', url, error);
+		return null;
 	}
 }
