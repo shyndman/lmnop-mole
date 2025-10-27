@@ -8,6 +8,7 @@
 		"build:chrome": "webpack --env BROWSER=chrome --mode production",
 		"build:firefox": "webpack --env BROWSER=firefox --mode production",
 		"build": "npm run build:chrome && npm run build:firefox",
+		"build:xpi": "npm run build:firefox && rm -f build/mole-firefox.xpi && cd build/dist/firefox && zip -r ../../mole-firefox.xpi .",
 		"build:dev:chrome": "webpack --env BROWSER=chrome --mode development",
 		"dev": "npm run dev:chrome",
 		"pretest": "npm run build:dev:chrome",
@@ -32,6 +33,7 @@
 		"ts-loader": "^9.5.1",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.5.4",
+		"web-ext": "^9.1.0",
 		"webpack": "^5.97.1",
 		"webpack-cli": "^5.1.4"
 	},
