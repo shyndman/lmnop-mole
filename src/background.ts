@@ -71,6 +71,17 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       const logMessage = '[mole] Extracted page data:';
       backgroundLog('log', logMessage, pageData, tabId);
 
+      // Broadcast the ready content to any listeners (e.g., popup)
+      chrome.runtime.sendMessage({
+        action: 'tabDataReady',
+        tabId,
+        payload: {
+          state: 'ready',
+          content: pageData.markdown,
+          contentSize: contentSize
+        }
+      });
+
       // Send page data to deaddrop server
       await sendPageData(pageData, tabId);
     } catch (err) {
@@ -82,6 +93,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
       const errorMessage = '[mole] Processing error:';
       backgroundLog('error', errorMessage, err, tabId);
+
+      chrome.runtime.sendMessage({
+        action: 'tabDataReady',
+        tabId,
+        payload: tabStates.get(tabId)
+      });
     }
   }
 });

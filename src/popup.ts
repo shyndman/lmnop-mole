@@ -21,8 +21,6 @@ class DebugPopup {
   private state: PopupState;
   private display: PopupDisplay;
   private elements: PopupElements;
-  private pollingInterval?: number;
-  private pollingTimeout?: number;
   private statusUpdateInterval?: number;
   private currentTabId: number = -1;
   private currentTitle: string = '';
@@ -68,6 +66,7 @@ class DebugPopup {
     console.log('[mole] Popup loaded');
     this.initialize();
     this.startStatusUpdates();
+    this.subscribeToBackgroundMessages();
   }
 
   private showLoading(): void {
@@ -78,7 +77,7 @@ class DebugPopup {
   private showError(message: string): void {
     document.body.className = 'state-error';
     this.elements.error.textContent = message;
-    this.stopPolling();
+    this.state.isLoading = false;
 
     this.state.isLoading = false;
     this.state.error = message;
@@ -87,7 +86,6 @@ class DebugPopup {
   private showContent(content: string, tabId: number, contentSize: number): void {
     document.body.className = 'state-content';
     this.elements.textarea.value = content;
-    this.stopPolling();
 
     // Update byte count display
     const formatted = this.formatBytes(contentSize);
@@ -99,8 +97,15 @@ class DebugPopup {
     this.state.error = null;
     this.state.tabId = tabId;
 
-    this.display.textareaFocused = false;
-    this.display.textSelected = false;
+    // Auto-focus and select all content once populated
+    queueMicrotask(() => {
+      if (document.activeElement !== this.elements.textarea) {
+        this.elements.textarea.focus();
+      }
+      this.elements.textarea.select();
+      this.display.textareaFocused = true;
+      this.display.textSelected = true;
+    });
   }
 
   private formatBytes(bytes: number): {number: string, unit: string} {
@@ -110,46 +115,6 @@ class DebugPopup {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     const number = parseFloat((bytes / Math.pow(k, i)).toFixed(1)).toString();
     return {number, unit: sizes[i]};
-  }
-
-  private async requestTabData(tabId: number): Promise<TabDataResponse> {
-    return await chrome.runtime.sendMessage({
-      action: "getTabData",
-      tabId: tabId
-    }) as TabDataResponse;
-  }
-
-  private startPolling(tabId: number): void {
-    this.stopPolling(); // Clear any existing polling
-
-    // Set up 300ms interval polling
-    this.pollingInterval = window.setInterval(async () => {
-      try {
-        const response = await this.requestTabData(tabId);
-        this.handleTabDataResponse(response, tabId);
-      } catch (error) {
-        console.error('[mole] Polling error:', error);
-        this.showError('Unable to communicate with background script');
-      }
-    }, 300);
-
-    // Set up 30 second timeout
-    this.pollingTimeout = window.setTimeout(() => {
-      this.stopPolling();
-      this.showError('Timeout waiting for content to load');
-    }, 30000);
-  }
-
-  private stopPolling(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = undefined;
-    }
-    if (this.pollingTimeout) {
-      clearTimeout(this.pollingTimeout);
-      this.pollingTimeout = undefined;
-    }
-    this.stopStatusUpdates();
   }
 
   private handleTabDataResponse(response: TabDataResponse, tabId: number): void {
@@ -168,7 +133,7 @@ class DebugPopup {
         this.showError(response.error || 'An error occurred while processing the page');
         break;
       case 'loading':
-        // Continue polling
+        // Continue waiting for push message
         break;
     }
   }
@@ -202,16 +167,18 @@ class DebugPopup {
       }
 
       // Request initial tab data
-      const response = await this.requestTabData(activeTab.id);
+      const response = await chrome.runtime.sendMessage({
+        action: "getTabData",
+        tabId: activeTab.id
+      }) as TabDataResponse;
 
       // Handle initial response
       this.handleTabDataResponse(response, activeTab.id);
 
-      // If still loading, start polling
+      // Otherwise wait for push notification
       if (response.state === 'loading') {
-        this.startPolling(activeTab.id);
+        console.log('[mole] Waiting for extraction to finish via push notification');
       }
-
     } catch (error) {
       console.error('[mole] Popup error:', error);
       this.showError('Unable to communicate with background script');
@@ -274,6 +241,21 @@ class DebugPopup {
       clearInterval(this.statusUpdateInterval);
       this.statusUpdateInterval = undefined;
     }
+  }
+
+  private subscribeToBackgroundMessages(): void {
+    chrome.runtime.onMessage.addListener((request: any) => {
+      if (request.action !== 'tabDataReady') {
+        return;
+      }
+
+      const { tabId, payload } = request;
+      if (tabId !== this.currentTabId) {
+        return;
+      }
+
+      this.handleTabDataResponse(payload as TabDataResponse, tabId);
+    });
   }
 
   private async handleCopyClick(): Promise<void> {
