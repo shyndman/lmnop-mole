@@ -5,15 +5,15 @@ import { updateBrowserActionIcon } from './icon-status';
 declare const DEADDROP_SERVER_URL: string;
 
 const STORAGE_KEY_RETRY_QUEUE = 'retryQueue';
-const RETRY_INTERVAL_MS = 60000; // 1 minute
+const RETRY_INTERVAL_MINUTES = 1;
+const RETRY_ALARM_NAME = 'moleRetryQueue';
 
 let retryQueue: RetryQueueItem[] = [];
-let retryIntervalId: number | undefined;
 let currentStatus: TransmissionStatus = 'idle';
 
 export async function initializeTransmission(): Promise<void> {
   await loadRetryQueue();
-  startRetryInterval();
+  startRetryAlarm();
 
   // Set initial icon status
   const initialStatus = retryQueue.length > 0 ? 'queued' : 'idle';
@@ -181,16 +181,32 @@ async function saveRetryQueue(): Promise<void> {
   }
 }
 
-function startRetryInterval(): void {
-  if (retryIntervalId) {
-    clearInterval(retryIntervalId);
+function startRetryAlarm(): void {
+  if (!chrome.alarms) {
+    console.warn('[mole] chrome.alarms API unavailable; retry queue will not auto-process');
+    return;
   }
 
-  retryIntervalId = window.setInterval(async () => {
-    if (retryQueue.length > 0) {
-      await processRetryQueue();
+  chrome.alarms.clear(RETRY_ALARM_NAME, () => {
+    chrome.alarms.create(RETRY_ALARM_NAME, {
+      periodInMinutes: RETRY_INTERVAL_MINUTES,
+      delayInMinutes: RETRY_INTERVAL_MINUTES
+    });
+  });
+}
+
+if (chrome.alarms) {
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name !== RETRY_ALARM_NAME) {
+      return;
     }
-  }, RETRY_INTERVAL_MS);
+
+    if (retryQueue.length > 0) {
+      processRetryQueue().catch((error) => {
+        backgroundLog('error', '[mole] Retry alarm processing failed', error);
+      });
+    }
+  });
 }
 
 function generateQueueItemId(pageData: PageData): string {
