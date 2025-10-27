@@ -15,6 +15,7 @@ interface PopupElements {
   retryQueueSize: HTMLElement;
   retryButton: HTMLButtonElement;
   copyButton: HTMLButtonElement;
+  rerunButton: HTMLButtonElement;
 }
 
 class DebugPopup {
@@ -51,7 +52,8 @@ class DebugPopup {
       retryInfo: document.getElementById('retryInfo')!,
       retryQueueSize: document.getElementById('retryQueueSize')!,
       retryButton: document.getElementById('retryButton') as HTMLButtonElement,
-      copyButton: document.getElementById('copyButton') as HTMLButtonElement
+      copyButton: document.getElementById('copyButton') as HTMLButtonElement,
+      rerunButton: document.getElementById('rerunButton') as HTMLButtonElement
     };
 
     // Set up event listeners
@@ -61,6 +63,14 @@ class DebugPopup {
 
     this.elements.copyButton.addEventListener('click', () => {
       this.handleCopyClick();
+    });
+
+    this.elements.rerunButton.addEventListener('click', () => {
+      this.handleRerunClick();
+    });
+
+    this.elements.textarea.addEventListener('click', () => {
+      this.handleTextareaClick();
     });
 
     console.log('[mole] Popup loaded');
@@ -97,15 +107,13 @@ class DebugPopup {
     this.state.error = null;
     this.state.tabId = tabId;
 
-    // Auto-focus and select all content once populated
-    queueMicrotask(() => {
-      if (document.activeElement !== this.elements.textarea) {
-        this.elements.textarea.focus();
-      }
-      this.elements.textarea.select();
-      this.display.textareaFocused = true;
-      this.display.textSelected = true;
+    chrome.runtime.sendMessage({
+      action: 'setTransmissionStatus',
+      status: 'success'
+    }).catch((error) => {
+      console.error('[mole] Failed to update icon status:', error);
     });
+
   }
 
   private formatBytes(bytes: number): {number: string, unit: string} {
@@ -260,12 +268,74 @@ class DebugPopup {
 
   private async handleCopyClick(): Promise<void> {
     try {
-      const content = this.elements.textarea.value;
-      if (!content) {
+      const copied = await this.copyFormattedContent(this.elements.textarea.value, { showFeedback: true });
+      if (!copied) {
         return;
       }
+      this.showCopyFeedback('Copied!');
 
-      const formattedContent = `---
+    } catch (error) {
+      console.error('[mole] Copy failed:', error);
+      this.showCopyFeedback('Failed');
+    }
+  }
+
+  private async handleTextareaClick(): Promise<void> {
+    try {
+      const copied = await this.copyFormattedContent(this.elements.textarea.value, { showFeedback: false });
+      if (copied) {
+        window.close();
+      }
+    } catch (error) {
+      console.error('[mole] Auto copy on textarea click failed:', error);
+    }
+  }
+
+  private async handleRerunClick(): Promise<void> {
+    if (this.currentTabId === -1) {
+      return;
+    }
+
+    this.elements.rerunButton.disabled = true;
+    const originalText = this.elements.rerunButton.textContent;
+    this.elements.rerunButton.textContent = 'Running...';
+
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: 'rerunExtraction',
+        tabId: this.currentTabId
+      });
+
+      this.refreshTabDataFromResponse(response?.tabData);
+
+      if (!response?.success) {
+        throw new Error(response?.error || 'Unknown rerun error');
+      }
+    } catch (error) {
+      console.error('[mole] Rerun failed:', error);
+      this.showError('Rerun failed. See console.');
+    } finally {
+      this.elements.rerunButton.disabled = false;
+      this.elements.rerunButton.textContent = originalText;
+    }
+  }
+
+  private refreshTabDataFromResponse(tabData?: TabDataResponse): void {
+    if (!tabData) {
+      this.showLoading();
+      this.elements.error.textContent = '';
+      return;
+    }
+
+    this.handleTabDataResponse(tabData, this.currentTabId);
+  }
+
+  private async copyFormattedContent(content: string, options: { showFeedback?: boolean } = {}): Promise<boolean> {
+    if (!content) {
+      return false;
+    }
+
+    const formattedContent = `---
 
 title: ${this.currentTitle}
 url: ${this.currentUrl}
@@ -274,29 +344,26 @@ content:
 ${content}
 \`\`\``;
 
-      await navigator.clipboard.writeText(formattedContent);
-
-      // Show feedback
-      const originalText = this.elements.copyButton.textContent;
-      this.elements.copyButton.textContent = 'Copied!';
-      this.elements.copyButton.classList.add('copied');
-
-      setTimeout(() => {
-        this.elements.copyButton.textContent = originalText;
-        this.elements.copyButton.classList.remove('copied');
-      }, 1500);
-
-    } catch (error) {
-      console.error('[mole] Copy failed:', error);
-
-      // Fallback feedback for copy failure
-      const originalText = this.elements.copyButton.textContent;
-      this.elements.copyButton.textContent = 'Failed';
-
-      setTimeout(() => {
-        this.elements.copyButton.textContent = originalText;
-      }, 1500);
+    await navigator.clipboard.writeText(formattedContent);
+    if (options.showFeedback) {
+      this.showCopyFeedback('Copied!');
     }
+    return true;
+  }
+
+  private showCopyFeedback(label: string): void {
+    const originalText = this.elements.copyButton.textContent;
+    this.elements.copyButton.textContent = label;
+    if (label === 'Copied!') {
+      this.elements.copyButton.classList.add('copied');
+    } else {
+      this.elements.copyButton.classList.remove('copied');
+    }
+
+    setTimeout(() => {
+      this.elements.copyButton.textContent = originalText;
+      this.elements.copyButton.classList.remove('copied');
+    }, 1500);
   }
 }
 

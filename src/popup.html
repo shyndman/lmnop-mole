@@ -199,6 +199,32 @@
             display: block;
         }
 
+        .toolbar {
+            margin-top: 8px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .rerun-button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .rerun-button:hover {
+            background: #059669;
+        }
+
+        .rerun-button:active {
+            background: #047857;
+        }
+
         .transmission-status {
             margin-top: 8px;
             padding: 6px;
@@ -264,6 +290,9 @@
                     placeholder="No content extracted from this page..."
                 ></textarea>
                 <button id="copyButton" class="copy-button" title="Copy formatted content">Copy</button>
+            </div>
+            <div class="toolbar">
+                <button id="rerunButton" class="rerun-button" title="Re-run content extraction">Rerun</button>
             </div>
         </div>
         <div id="byteCountContainer" class="byte-count-container">

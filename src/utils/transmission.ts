@@ -61,6 +61,11 @@ export async function sendPageData(pageData: PageData, tabId?: number): Promise<
   }
 }
 
+export async function setTransmissionStatus(status: TransmissionStatus): Promise<void> {
+  currentStatus = status;
+  await updateBrowserActionIcon(status);
+}
+
 export async function addToRetryQueue(pageData: PageData, error: string): Promise<void> {
   const queueItem: RetryQueueItem = {
     id: generateQueueItemId(pageData),
