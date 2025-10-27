@@ -8,9 +8,13 @@
 		"build:chrome": "webpack --env BROWSER=chrome --mode production",
 		"build:firefox": "webpack --env BROWSER=firefox --mode production",
 		"build": "npm run build:chrome && npm run build:firefox",
+		"build:dev:chrome": "webpack --env BROWSER=chrome --mode development",
 		"dev": "npm run dev:chrome",
+		"pretest": "npm run build:dev:chrome",
 		"test": "playwright test",
+		"pretest:ui": "npm run build:dev:chrome",
 		"test:ui": "playwright test --ui",
+		"pretest:headed": "npm run build:dev:chrome",
 		"test:headed": "playwright test --headed"
 	},
 	"devDependencies": {

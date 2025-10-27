@@ -8,11 +8,9 @@ module.exports = (env, argv) => {
 	const isProduction = argv.mode === 'production';
 
 	const getOutputDir = () => {
-		if (isProduction) {
-			return isFirefox ? 'dist_firefox' : 'dist';
-		} else {
-			return isFirefox ? 'dev_firefox' : 'dev';
-		}
+		const buildType = isProduction ? 'dist' : 'dev';
+		const browser = isFirefox ? 'firefox' : 'chrome';
+		return path.join('build', buildType, browser);
 	};
 
 	const outputDir = getOutputDir();
@@ -73,4 +71,3 @@ module.exports = (env, argv) => {
 
 	return [mainConfig];
 };
-

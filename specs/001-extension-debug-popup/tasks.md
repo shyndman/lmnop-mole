@@ -55,7 +55,7 @@
 - [ ] T009 Update src/popup.js to implement focus and content selection logic
 
 ## Phase 3.4: Integration & Build
-- [ ] T010 Test webpack build generates popup files in both dist/ and dist_firefox/
+- [ ] T010 Test webpack build generates popup files in both build/dist/chrome and build/dist/firefox
 - [ ] T011 Verify extension loading with popup functionality in Chrome
 - [ ] T012 Verify extension loading with popup functionality in Firefox
 
@@ -110,7 +110,7 @@ Implement: chrome.tabs.query({active: true, currentWindow: true}), chrome.tabs.s
 ### T009 Update src/popup.js to implement focus and content selection logic
 Add textarea.focus() and textarea.select() after content is loaded. Handle both success and error cases. Ensure content is pre-selected for easy copying.
 
-### T010 Test webpack build generates popup files in both dist/ and dist_firefox/
+### T010 Test webpack build generates popup files in both build/dist/chrome and build/dist/firefox
 Run `npm run build` and verify popup.html appears in both output directories. Verify manifest files contain action.default_popup field.
 
 ### T011 Verify extension loading with popup functionality in Chrome

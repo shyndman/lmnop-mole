@@ -74,7 +74,7 @@ npm run build:firefox
 # Load in Firefox
 # 1. Open about:debugging#/runtime/this-firefox
 # 2. Click "Load Temporary Add-on"
-# 3. Select `dist_firefox/manifest.json`
+# 3. Select `build/dist/firefox/manifest.json`
 # 4. Repeat steps 2-5 above
 ```
 

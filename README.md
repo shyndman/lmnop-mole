@@ -28,18 +28,19 @@ mole is a web extension built with TypeScript and Webpack. It supports Chrome an
   ```bash
   npm run build
   ```
+  Bundles land in `build/dist/chrome` and `build/dist/firefox` with their respective `manifest.json`.
 
 ### Loading the extension
 
 - **Chrome:**
   1. Open `chrome://extensions`
   2. Enable "Developer mode"
-  3. Click "Load unpacked" and select the `dist` directory
+  3. Click "Load unpacked" and select the `build/dist/chrome` directory
 
 - **Firefox:**
   1. Open `about:debugging#/runtime/this-firefox`
   2. Click "Load Temporary Add-on"
-  3. Select the `manifest.json` file in the `dist_firefox` directory
+  3. Select the `manifest.json` file in `build/dist/firefox`
 
 ## Development
 
@@ -47,6 +48,7 @@ mole is a web extension built with TypeScript and Webpack. It supports Chrome an
   ```bash
   npm run dev:chrome
   ```
+  Watch builds emit to `build/dev/chrome` (Chrome) and `build/dev/firefox` (Firefox). `npm test` auto-builds the Chrome dev bundle before launching Playwright.
 
 - **Run tests:**
   ```bash
