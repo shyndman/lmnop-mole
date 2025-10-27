@@ -30,6 +30,12 @@ mole is a web extension built with TypeScript and Webpack. It supports Chrome an
   ```
   Bundles land in `build/dist/chrome` and `build/dist/firefox` with their respective `manifest.json`.
 
+- **Build a signed-ready Firefox XPI:**
+  ```bash
+  npm run build:xpi
+  ```
+  This packages `build/dist/firefox` into `build/mole-firefox.xpi`, ready to upload for Mozilla self-distribution signing.
+
 ### Loading the extension
 
 - **Chrome:**
