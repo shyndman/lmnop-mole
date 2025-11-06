@@ -132,6 +132,11 @@ async function processTabExtraction(tabId: number, url: string): Promise<TabData
   });
 
   const response = await chrome.tabs.sendMessage(tabId, { action: 'getPageContent' });
+
+  if (response?.error) {
+    throw new Error(response.error.message || 'Content extraction failed.');
+  }
+
   const imageUrls = extractImageUrls(response.markdown || '', url, response.image);
 
   const pageData: PageData = {
