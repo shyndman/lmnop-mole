@@ -1,0 +1,22 @@
+{
+  "videoDetails": {
+    "videoId": "abc123"
+  },
+  "captions": {
+    "playerCaptionsTracklistRenderer": {
+      "captionTracks": [
+        {
+          "baseUrl": "https://www.youtube.com/api/timedtext?v=abc123&lang=en&fmt=srv3",
+          "name": { "runs": [{ "text": "English" }] },
+          "languageCode": "en"
+        },
+        {
+          "baseUrl": "https://www.youtube.com/api/timedtext?v=abc123&lang=en&fmt=srv3&kind=asr",
+          "name": { "runs": [{ "text": "English (auto-generated)" }] },
+          "languageCode": "en",
+          "kind": "asr"
+        }
+      ]
+    }
+  }
+}

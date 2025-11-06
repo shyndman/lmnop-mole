@@ -1,0 +1,17 @@
+{
+  "videoDetails": {
+    "videoId": "xyz789"
+  },
+  "captions": {
+    "playerCaptionsTracklistRenderer": {
+      "captionTracks": [
+        {
+          "baseUrl": "https://www.youtube.com/api/timedtext?v=xyz789&lang=en&fmt=srv3",
+          "name": { "runs": [{ "text": "English (auto-generated)" }] },
+          "languageCode": "en",
+          "kind": "asr"
+        }
+      ]
+    }
+  }
+}
